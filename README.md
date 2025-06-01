@@ -31,13 +31,114 @@ STEP-3: Arrange the keyword without duplicates in a 5*5 matrix in the row order 
 STEP-4: Group the plain text in pairs and match the corresponding corner letters by forming a rectangular grid.
 STEP-5: Display the obtained cipher text.
 
+## Program:
+```
+SIZE = 5
 
+def generate_key_matrix(key):
+    key = key.upper().replace('J', 'I')
+    seen = set()
+    filtered_key = ''
 
+    for char in key:
+        if char.isalpha() and char not in seen:
+            seen.add(char)
+            filtered_key += char
 
-Program:
+    for ch in map(chr, range(ord('A'), ord('Z') + 1)):
+        if ch == 'J': continue
+        if ch not in seen:
+            filtered_key += ch
 
+    matrix = [[None]*SIZE for _ in range(SIZE)]
+    index = 0
+    for i in range(SIZE):
+        for j in range(SIZE):
+            matrix[i][j] = filtered_key[index]
+            index += 1
 
+    return matrix
 
+def find_position(matrix, ch):
+    if ch == 'J':
+        ch = 'I'
+    for i in range(SIZE):
+        for j in range(SIZE):
+            if matrix[i][j] == ch:
+                return i, j
+    return None, None
 
+def process_digraph(a, b, matrix, encrypt=True):
+    row1, col1 = find_position(matrix, a)
+    row2, col2 = find_position(matrix, b)
 
-Output:
+    if row1 == row2:  # Same row
+        if encrypt:
+            return matrix[row1][(col1 + 1) % SIZE], matrix[row2][(col2 + 1) % SIZE]
+        else:
+            return matrix[row1][(col1 - 1) % SIZE], matrix[row2][(col2 - 1) % SIZE]
+    elif col1 == col2:  # Same column
+        if encrypt:
+            return matrix[(row1 + 1) % SIZE][col1], matrix[(row2 + 1) % SIZE][col2]
+        else:
+            return matrix[(row1 - 1) % SIZE][col1], matrix[(row2 - 1) % SIZE][col2]
+    else:  # Rectangle
+        return matrix[row1][col2], matrix[row2][col1]
+
+def preprocess_text(text):
+    text = text.upper().replace('J', 'I')
+    cleaned = ''.join([ch for ch in text if ch.isalpha()])
+    result = ''
+    i = 0
+    while i < len(cleaned):
+        a = cleaned[i]
+        b = ''
+        if i + 1 < len(cleaned):
+            b = cleaned[i + 1]
+            if a == b:
+                b = 'X'
+                i += 1
+            else:
+                i += 2
+        else:
+            b = 'X'
+            i += 1
+        result += a + b
+    return result
+
+def encrypt_decrypt_text(text, matrix, encrypt=True):
+    processed = preprocess_text(text)
+    result = ''
+    for i in range(0, len(processed), 2):
+        a, b = processed[i], processed[i+1]
+        res_a, res_b = process_digraph(a, b, matrix, encrypt)
+        result += res_a + res_b
+    return result
+
+def print_matrix(matrix):
+    print("Key Matrix:")
+    for row in matrix:
+        print(' '.join(row))
+
+def main():
+    key = input("Enter the key: ")
+    text = input("Enter text to encrypt: ")
+
+    matrix = generate_key_matrix(key)
+    print_matrix(matrix)
+
+    encrypted = encrypt_decrypt_text(text, matrix, encrypt=True)
+    print("Encrypted Text:", encrypted)
+
+    decrypted = encrypt_decrypt_text(encrypted, matrix, encrypt=False)
+    print("Decrypted Text:", decrypted)
+
+if __name__ == "__main__":
+    main()
+
+```
+## Output:
+![image](https://github.com/user-attachments/assets/fbb59576-72b4-4a1f-ab2e-6aaa4462e9bb)
+
+## Result:
+the implementation of playfair cipher was executed successfully
